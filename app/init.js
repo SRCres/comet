@@ -1,10 +1,10 @@
 require([
   'backbone',
-  'js/views/app',
+  'app',
   'js/routers/router'
-], function(Backbone, AppView, AppRouter) {
+], function(Backbone, App, AppRouter) {
   new AppRouter();
   Backbone.history.start();
 
-  new AppView();
+  App.initialize();
 });

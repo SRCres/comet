@@ -3,8 +3,8 @@ require.config({
     backbone: 'vendor/backbone/backbone',
     underscore: 'vendor/underscore/underscore',
     jquery: 'vendor/jquery/dist/jquery',
-    box2d: 'vendor/box2D/box2d',
-    threejs: 'vendor/threejs/build/threejs'
+    three: 'vendor/threejs/build/three',
+    box2d: 'vendor/box2d.js/box2d.umd'
   },
 
   shim: {
@@ -18,10 +18,7 @@ require.config({
       deps: ['jquery', 'underscore'],
       exports: 'Backbone'
     },
-    box2d: {
-      exports: 'Box2D'
-    },
-    threejs: {
+    three: {
       exports: 'THREE'
     }
   }

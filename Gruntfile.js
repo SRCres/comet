@@ -8,6 +8,13 @@ module.exports = function(grunt) {
       }
     },
 
+    copy: {
+      main: {
+        src: 'app/css/*',
+        dest: 'dist/styles.css'
+      }
+    },
+
     jshint: {
       options: {
         globals: {
@@ -34,8 +41,9 @@ module.exports = function(grunt) {
   });
 
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-requirejs');
 
-  grunt.registerTask('default', ['clean:js', 'jshint', 'requirejs']);
+  grunt.registerTask('default', ['clean:js', 'copy', 'jshint', 'requirejs']);
 };
