@@ -54009,22 +54009,8 @@ define('js/views/Comet',[
       this.listenTo(this.model, 'change', this.render);
     },
 
-    renderTail: function(position) {
-      var material = new THREE.LineBasicMaterial({ color: 0xFFFFFF, linewidth: 2 }),
-          geometry = new THREE.Geometry(),
-          vector1 = new THREE.Vector3(this.sphere.position.x, this.sphere.position.x, this.sphere.position.z),
-          vector2 = new THREE.Vector3(position.x, position.x, position.z);
-
-      geometry.vertices.push(vector1);
-      geometry.vertices.push(vector2);
-      this.tail = new THREE.Line(geometry, material);
-
-      App.scene.add(this.tail);
-    },
-
     render: function() {
       var position = this.model.get('position');
-      this.renderTail(position);
       this.sphere.position.x = position.x;
       this.sphere.position.y = position.y;
     }
