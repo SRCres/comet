@@ -74,13 +74,13 @@ define([
           config.radius = data.radius;
           config.mass = data.radius * appConfig.planet.mass_mult;
           config.position = data.position;
+          config.color = Math.round(Math.random()*0xFFFFFF);
           model = new PlanetModel(config);
           new PlanetView({ model: model });
           this.planetsCollection.add(model);
           break;
       }
     }
-
   };
 
   return appController;

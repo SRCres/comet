@@ -54009,8 +54009,22 @@ define('js/views/Comet',[
       this.listenTo(this.model, 'change', this.render);
     },
 
+    renderTail: function(position) {
+      var material = new THREE.LineBasicMaterial({ color: 0xFFFFFF, linewidth: 2 }),
+          geometry = new THREE.Geometry(),
+          vector1 = new THREE.Vector3(this.sphere.position.x, this.sphere.position.x, this.sphere.position.z),
+          vector2 = new THREE.Vector3(position.x, position.x, position.z);
+
+      geometry.vertices.push(vector1);
+      geometry.vertices.push(vector2);
+      this.tail = new THREE.Line(geometry, material);
+
+      App.scene.add(this.tail);
+    },
+
     render: function() {
       var position = this.model.get('position');
+      this.renderTail(position);
       this.sphere.position.x = position.x;
       this.sphere.position.y = position.y;
     }
@@ -54083,7 +54097,7 @@ define('js/views/app',[
 
     onKeydown: function(evt) {
       if (evt.shiftKey && !this.isShifted) {
-        this.clearCometHandler();
+        this.clearCometHelper();
       }
       this.isShifted = evt.shiftKey;
     },
@@ -54091,11 +54105,11 @@ define('js/views/app',[
     onKeyup: function(evt) {
       if (this.isShifted) {
         this.isShifted = evt.shiftKey;
-        this.clearPlanetHandler();
+        this.clearPlanetHelper();
       }
       
       if (evt.which === 27) {
-        this.clearCometHandler();
+        this.clearCometHelper();
         this.$el.off('mousemove');
         this.isCreation = false;
       }
@@ -54121,20 +54135,20 @@ define('js/views/app',[
       );
 
       if (this.isShifted) {
-        this.clearPlanetHandler();
-        this.showPlanetHandler();
+        this.clearPlanetHelper();
+        this.showPlanetHelper();
       } else {
-        this.clearCometHandler();
-        this.showCometHandler();
+        this.clearCometHelper();
+        this.showCometHelper();
       }
     },
 
     onMouseUp: function(evt) {
       if (this.isCreation) {
         if (this.isShifted) {
-          this.clearPlanetHandler();
+          this.clearPlanetHelper();
         } else {
-          this.clearCometHandler();
+          this.clearCometHelper();
         }
         this.$el.off('mousemove');
         this.trigger('add:astronomy-object', {
@@ -54147,13 +54161,13 @@ define('js/views/app',[
     },
 
     onMouseOut: function(evt) {
-      this.clearPlanetHandler();
-      this.clearCometHandler();
+      this.clearPlanetHelper();
+      this.clearCometHelper();
       this.$el.off('mousemove');
       this.isCreation = false;
     },
 
-    showPlanetHandler: function() {
+    showPlanetHelper: function() {
       var material = new THREE.LineBasicMaterial({ color: 0x00B7FF, linewidth: 3 }),
           geometry = new THREE.CircleGeometry(this.radius, appConfig.render.circle.segments),
           vector = new THREE.Vector3(this.startPosition.x, this.startPosition.y, this.startPosition.z);
@@ -54166,11 +54180,11 @@ define('js/views/app',[
       App.scene.add(this.planetHandler);
     },
 
-    clearPlanetHandler: function() {
+    clearPlanetHelper: function() {
       App.scene.remove(this.planetHandler);
     },
 
-    showCometHandler: function() {
+    showCometHelper: function() {
       var material = new THREE.LineBasicMaterial({ color: 0x00B7FF, linewidth: 3 }),
           geometry = new THREE.Geometry(),
           vector1 = new THREE.Vector3(this.startPosition.x, this.startPosition.y, this.startPosition.z),
@@ -54183,7 +54197,7 @@ define('js/views/app',[
       App.scene.add(this.cometHandler);
     },
 
-    clearCometHandler: function() {
+    clearCometHelper: function() {
       App.scene.remove(this.cometHandler);
     },
 
@@ -54288,13 +54302,13 @@ define('js/controllers/app',[
           config.radius = data.radius;
           config.mass = data.radius * appConfig.planet.mass_mult;
           config.position = data.position;
+          config.color = Math.round(Math.random()*0xFFFFFF);
           model = new PlanetModel(config);
           new PlanetView({ model: model });
           this.planetsCollection.add(model);
           break;
       }
     }
-
   };
 
   return appController;
