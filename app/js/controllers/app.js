@@ -2,12 +2,12 @@ define([
   'box2d',
   'appConfig',
   'app',
-  'js/collections/comets',
-  'js/collections/planets',
-  'js/models/comet',
-  'js/models/planet',
-  'js/views/comet',
-  'js/views/planet',
+  'js/collections/Comets',
+  'js/collections/Planets',
+  'js/models/Comet',
+  'js/models/Planet',
+  'js/views/Comet',
+  'js/views/Planet',
   'js/views/app'
 ], function(Box2D, appConfig, App, CometsCollection, PlanetsCollection, CometModel, PlanetModel, CometView, PlanetView, appView) {
   var appController = {
