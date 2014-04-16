@@ -1,6 +1,6 @@
 define([
   'backbone',
-  'js/models/comet'
+  'js/models/Comet'
 ], function(Backbone, CometModel) {
   var CometsCollection = Backbone.Collection.extend({
     model: CometModel

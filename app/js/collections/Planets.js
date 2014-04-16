@@ -1,6 +1,6 @@
 define([
   'backbone',
-  'js/models/planet'
+  'js/models/Planet'
 ], function(Backbone, PlanetModel) {
   var PlanetsCollection = Backbone.Collection.extend({
     model: PlanetModel
