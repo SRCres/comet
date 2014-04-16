@@ -8,6 +8,7 @@ define([
   var AppView = Backbone.View.extend({
     el: '#comet-container',
     isShifted: false,
+    isCreation: false,
     startPosition: null,
     endPosition: null,
     distance: {},
@@ -16,17 +17,32 @@ define([
 
     events: {
       'mousedown': 'onMouseDown',
-      'mouseup': 'onMouseUp'
+      'mouseup': 'onMouseUp',
+      'mouseout': 'onMouseOut'
     },
 
     initialize: function() {
-      $(document).on('keydown keyup', this.onKeypress.bind(this));
+      $(document).on('keydown', this.onKeydown.bind(this));
+      $(document).on('keyup', this.onKeyup.bind(this));
     },
 
-    onKeypress: function(evt) {
+    onKeydown: function(evt) {
+      if (evt.shiftKey && !this.isShifted) {
+        this.clearCometHelper();
+      }
       this.isShifted = evt.shiftKey;
-      if (evt.type === 'keyup') {
+    },
+
+    onKeyup: function(evt) {
+      if (this.isShifted) {
+        this.isShifted = evt.shiftKey;
+        this.clearPlanetHelper();
+      }
+      
+      if (evt.which === 27) {
+        this.clearCometHelper();
         this.$el.off('mousemove');
+        this.isCreation = false;
       }
     },
 
@@ -35,6 +51,7 @@ define([
       this.distance = { x: 0, y: 0 };
       this.$el.off('mousemove');
       this.$el.on('mousemove', this.onMouseMove.bind(this));
+      this.isCreation = true;
     },
 
     onMouseMove: function(evt) {
@@ -49,29 +66,39 @@ define([
       );
 
       if (this.isShifted) {
-        this.clearPlanetHandler();
-        this.showPlanetHandler();
+        this.clearPlanetHelper();
+        this.showPlanetHelper();
       } else {
-        this.clearCometHandler();
-        this.showCometHandler();
+        this.clearCometHelper();
+        this.showCometHelper();
       }
     },
 
     onMouseUp: function(evt) {
-      if (this.isShifted) {
-        this.clearPlanetHandler();
-      } else {
-        this.clearCometHandler();
+      if (this.isCreation) {
+        if (this.isShifted) {
+          this.clearPlanetHelper();
+        } else {
+          this.clearCometHelper();
+        }
+        this.$el.off('mousemove');
+        this.trigger('add:astronomy-object', {
+          position: this.startPosition,
+          distance: this.distance,
+          radius: this.radius
+        });
+        this.isCreation = false;
       }
-      this.$el.off('mousemove');
-      this.trigger('add:astronomy-object', {
-        position: this.startPosition,
-        distance: this.distance,
-        radius: this.radius
-      });
     },
 
-    showPlanetHandler: function() {
+    onMouseOut: function(evt) {
+      this.clearPlanetHelper();
+      this.clearCometHelper();
+      this.$el.off('mousemove');
+      this.isCreation = false;
+    },
+
+    showPlanetHelper: function() {
       var material = new THREE.LineBasicMaterial({ color: 0x00B7FF, linewidth: 3 }),
           geometry = new THREE.CircleGeometry(this.radius, appConfig.render.circle.segments),
           vector = new THREE.Vector3(this.startPosition.x, this.startPosition.y, this.startPosition.z);
@@ -84,11 +111,11 @@ define([
       App.scene.add(this.planetHandler);
     },
 
-    clearPlanetHandler: function() {
+    clearPlanetHelper: function() {
       App.scene.remove(this.planetHandler);
     },
 
-    showCometHandler: function() {
+    showCometHelper: function() {
       var material = new THREE.LineBasicMaterial({ color: 0x00B7FF, linewidth: 3 }),
           geometry = new THREE.Geometry(),
           vector1 = new THREE.Vector3(this.startPosition.x, this.startPosition.y, this.startPosition.z),
@@ -101,7 +128,7 @@ define([
       App.scene.add(this.cometHandler);
     },
 
-    clearCometHandler: function() {
+    clearCometHelper: function() {
       App.scene.remove(this.cometHandler);
     },
 

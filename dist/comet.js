@@ -53854,7 +53854,7 @@ define('js/models/comet',[
 
   return CometModel;
 });
-define('js/collections/comets',[
+define('js/collections/Comets',[
   'backbone',
   'js/models/comet'
 ], function(Backbone, CometModel) {
@@ -53898,7 +53898,7 @@ define('js/models/planet',[
 
   return PlanetModel;
 });
-define('js/collections/planets',[
+define('js/collections/Planets',[
   'backbone',
   'js/models/planet'
 ], function(Backbone, PlanetModel) {
@@ -53908,7 +53908,82 @@ define('js/collections/planets',[
 
   return PlanetsCollection;
 });
-define('js/views/comet',[
+define('js/models/Comet',[
+  'backbone',
+  'box2d',
+  'appConfig',
+  'app',
+  'js/models/AstronomyObject'
+], function(Backbone, Box2D, appConfig, App, AstronomyObject) {
+  var CometModel = AstronomyObject.extend({
+    initialize: function() {
+      var shape = new Box2D.b2CircleShape();
+      shape.set_m_p(new Box2D.b2Vec2(0, 0));
+      shape.set_m_radius(this.get('radius') / appConfig.conversion.factor);
+
+      var fixture_def = new Box2D.b2FixtureDef();
+      fixture_def.set_restitution(0);
+      fixture_def.set_friction(1);
+      fixture_def.set_density(1);
+      fixture_def.set_shape(shape);
+
+      var body_def = new Box2D.b2BodyDef(),
+          position = new Box2D.b2Vec2(
+            this.get('position').x / appConfig.conversion.factor,
+            this.get('position').y / appConfig.conversion.factor
+          );
+      body_def.set_type(Box2D.b2_dynamicBody);
+      body_def.set_position(position);
+
+      var force = new Box2D.b2Vec2(
+        this.get('initial_force').x / appConfig.conversion.factor,
+        this.get('initial_force').y / appConfig.conversion.factor
+      );
+      force.op_mul(-appConfig.conversion.factor * 0.5);
+
+      this.body = App.world.CreateBody(body_def);
+      this.body.CreateFixture(fixture_def);
+      this.body.SetLinearVelocity(force, position);
+    }
+  });
+
+  return CometModel;
+});
+define('js/models/Planet',[
+  'backbone',
+  'box2d',
+  'appConfig',
+  'app',
+  'js/models/AstronomyObject'
+], function(Backbone, Box2D, appConfig, App, AstronomyObject) {
+  var PlanetModel = AstronomyObject.extend({
+    initialize: function() {
+      var shape = new Box2D.b2CircleShape();
+      shape.set_m_p(new Box2D.b2Vec2(0, 0));
+      shape.set_m_radius(this.get('radius') / appConfig.conversion.factor);
+
+      var fixture_def = new Box2D.b2FixtureDef();
+      fixture_def.set_restitution(0);
+      fixture_def.set_friction(1);
+      fixture_def.set_density(1);
+      fixture_def.set_shape(shape);
+
+      var body_def = new Box2D.b2BodyDef(),
+          position = new Box2D.b2Vec2(
+            this.get('position').x / appConfig.conversion.factor,
+            this.get('position').y / appConfig.conversion.factor
+          );
+      body_def.set_type(Box2D.b2_staticBody);
+      body_def.set_position(position);
+
+      this.body = App.world.CreateBody(body_def);
+      this.body.CreateFixture(fixture_def);
+    }
+  });
+
+  return PlanetModel;
+});
+define('js/views/Comet',[
   'jquery',
   'underscore',
   'backbone',
@@ -53943,7 +54018,7 @@ define('js/views/comet',[
 
   return CometView;
 });
-define('js/views/planet',[
+define('js/views/Planet',[
   'jquery',
   'underscore',
   'backbone',
@@ -53988,6 +54063,7 @@ define('js/views/app',[
   var AppView = Backbone.View.extend({
     el: '#comet-container',
     isShifted: false,
+    isCreation: false,
     startPosition: null,
     endPosition: null,
     distance: {},
@@ -53996,17 +54072,32 @@ define('js/views/app',[
 
     events: {
       'mousedown': 'onMouseDown',
-      'mouseup': 'onMouseUp'
+      'mouseup': 'onMouseUp',
+      'mouseout': 'onMouseOut'
     },
 
     initialize: function() {
-      $(document).on('keydown keyup', this.onKeypress.bind(this));
+      $(document).on('keydown', this.onKeydown.bind(this));
+      $(document).on('keyup', this.onKeyup.bind(this));
     },
 
-    onKeypress: function(evt) {
+    onKeydown: function(evt) {
+      if (evt.shiftKey && !this.isShifted) {
+        this.clearCometHandler();
+      }
       this.isShifted = evt.shiftKey;
-      if (evt.type === 'keyup') {
+    },
+
+    onKeyup: function(evt) {
+      if (this.isShifted) {
+        this.isShifted = evt.shiftKey;
+        this.clearPlanetHandler();
+      }
+      
+      if (evt.which === 27) {
+        this.clearCometHandler();
         this.$el.off('mousemove');
+        this.isCreation = false;
       }
     },
 
@@ -54015,6 +54106,7 @@ define('js/views/app',[
       this.distance = { x: 0, y: 0 };
       this.$el.off('mousemove');
       this.$el.on('mousemove', this.onMouseMove.bind(this));
+      this.isCreation = true;
     },
 
     onMouseMove: function(evt) {
@@ -54038,17 +54130,27 @@ define('js/views/app',[
     },
 
     onMouseUp: function(evt) {
-      if (this.isShifted) {
-        this.clearPlanetHandler();
-      } else {
-        this.clearCometHandler();
+      if (this.isCreation) {
+        if (this.isShifted) {
+          this.clearPlanetHandler();
+        } else {
+          this.clearCometHandler();
+        }
+        this.$el.off('mousemove');
+        this.trigger('add:astronomy-object', {
+          position: this.startPosition,
+          distance: this.distance,
+          radius: this.radius
+        });
+        this.isCreation = false;
       }
+    },
+
+    onMouseOut: function(evt) {
+      this.clearPlanetHandler();
+      this.clearCometHandler();
       this.$el.off('mousemove');
-      this.trigger('add:astronomy-object', {
-        position: this.startPosition,
-        distance: this.distance,
-        radius: this.radius
-      });
+      this.isCreation = false;
     },
 
     showPlanetHandler: function() {
@@ -54114,12 +54216,12 @@ define('js/controllers/app',[
   'box2d',
   'appConfig',
   'app',
-  'js/collections/comets',
-  'js/collections/planets',
-  'js/models/comet',
-  'js/models/planet',
-  'js/views/comet',
-  'js/views/planet',
+  'js/collections/Comets',
+  'js/collections/Planets',
+  'js/models/Comet',
+  'js/models/Planet',
+  'js/views/Comet',
+  'js/views/Planet',
   'js/views/app'
 ], function(Box2D, appConfig, App, CometsCollection, PlanetsCollection, CometModel, PlanetModel, CometView, PlanetView, appView) {
   var appController = {
