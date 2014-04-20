@@ -53849,6 +53849,11 @@ define('js/models/Comet',[
       this.body = App.world.CreateBody(body_def);
       this.body.CreateFixture(fixture_def);
       this.body.SetLinearVelocity(force, position);
+      this.body.model = this;
+    },
+
+    contact: function(contactBody) {
+      this.destroy();
     }
   });
 
@@ -53893,6 +53898,11 @@ define('js/models/Planet',[
 
       this.body = App.world.CreateBody(body_def);
       this.body.CreateFixture(fixture_def);
+      this.body.model = this;
+    },
+
+    contact: function(contactBody) {
+      
     }
   });
 
@@ -53946,6 +53956,7 @@ define('js/views/Comet',[
       App.scene.add(this.path);
 
       this.listenTo(this.model, 'change', this.render);
+      this.listenTo(this.model, 'destroy', this.destroy);
     },
 
     renderPath: function() {
@@ -53962,6 +53973,12 @@ define('js/views/Comet',[
       this.sphere.position.x = position.x;
       this.sphere.position.y = position.y;
       this.renderPath();
+    },
+
+    destroy: function() {
+      App.scene.remove(this.sphere);
+      App.scene.remove(this.path);
+      this.remove();
     }
   });
 
@@ -54174,6 +54191,8 @@ define('js/controllers/app',[
   'js/views/app'
 ], function(Box2D, appConfig, App, CometsCollection, PlanetsCollection, CometModel, PlanetModel, CometView, PlanetView, appView) {
   var appController = {
+    contactListener: new Box2D.b2ContactListener(),
+
     initialize: function() {
       this.cometsCollection = new CometsCollection();
       this.planetsCollection = new PlanetsCollection();
@@ -54181,6 +54200,22 @@ define('js/controllers/app',[
       appView.on('add:astronomy-object', function(config) {
         this.addAstronomyObject((appView.isShifted ? 'planet' : 'comet'), config);
       }.bind(this));
+
+      Box2D.customizeVTable(this.contactListener, [{
+        original: Box2D.b2ContactListener.prototype.BeginContact,
+        replacement: function(thsPtr, contactPointer) {
+          var contact = Box2D.wrapPointer(contactPointer, Box2D.b2Contact),
+              fixtureA = contact.GetFixtureA(),
+              fixtureB = contact.GetFixtureB(),
+              bodyA = fixtureA.GetBody(),
+              bodyB = fixtureB.GetBody();
+
+          bodyA.model.contact(bodyB);
+          bodyB.model.contact(bodyA);
+        }
+      }]);
+
+      App.world.SetContactListener(this.contactListener);
 
       this.animate();
     },

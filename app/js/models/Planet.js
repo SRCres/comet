@@ -27,6 +27,11 @@ define([
 
       this.body = App.world.CreateBody(body_def);
       this.body.CreateFixture(fixture_def);
+      this.body.model = this;
+    },
+
+    contact: function(contactBody) {
+      
     }
   });
 

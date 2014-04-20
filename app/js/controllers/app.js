@@ -11,6 +11,8 @@ define([
   'js/views/app'
 ], function(Box2D, appConfig, App, CometsCollection, PlanetsCollection, CometModel, PlanetModel, CometView, PlanetView, appView) {
   var appController = {
+    contactListener: new Box2D.b2ContactListener(),
+
     initialize: function() {
       this.cometsCollection = new CometsCollection();
       this.planetsCollection = new PlanetsCollection();
@@ -18,6 +20,22 @@ define([
       appView.on('add:astronomy-object', function(config) {
         this.addAstronomyObject((appView.isShifted ? 'planet' : 'comet'), config);
       }.bind(this));
+
+      Box2D.customizeVTable(this.contactListener, [{
+        original: Box2D.b2ContactListener.prototype.BeginContact,
+        replacement: function(thsPtr, contactPointer) {
+          var contact = Box2D.wrapPointer(contactPointer, Box2D.b2Contact),
+              fixtureA = contact.GetFixtureA(),
+              fixtureB = contact.GetFixtureB(),
+              bodyA = fixtureA.GetBody(),
+              bodyB = fixtureB.GetBody();
+
+          bodyA.model.contact(bodyB);
+          bodyB.model.contact(bodyA);
+        }
+      }]);
+
+      App.world.SetContactListener(this.contactListener);
 
       this.animate();
     },

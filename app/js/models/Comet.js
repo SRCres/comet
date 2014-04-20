@@ -34,6 +34,11 @@ define([
       this.body = App.world.CreateBody(body_def);
       this.body.CreateFixture(fixture_def);
       this.body.SetLinearVelocity(force, position);
+      this.body.model = this;
+    },
+
+    contact: function(contactBody) {
+      this.destroy();
     }
   });
 

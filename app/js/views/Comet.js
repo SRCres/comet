@@ -36,6 +36,7 @@ define([
       App.scene.add(this.path);
 
       this.listenTo(this.model, 'change', this.render);
+      this.listenTo(this.model, 'destroy', this.destroy);
     },
 
     renderPath: function() {
@@ -52,6 +53,12 @@ define([
       this.sphere.position.x = position.x;
       this.sphere.position.y = position.y;
       this.renderPath();
+    },
+
+    destroy: function() {
+      App.scene.remove(this.sphere);
+      App.scene.remove(this.path);
+      this.remove();
     }
   });
 
