@@ -18,8 +18,8 @@ define([
     init: function() {
       App.world = world;
       App.camera = camera;
-      App.renderer = renderer;
       App.scene = scene;
+      App.renderer = renderer;
       App.ambientLight = ambientLight;
       App.directionalLight = directionalLight;
 

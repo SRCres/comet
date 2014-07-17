@@ -10,8 +10,10 @@ module.exports = function(grunt) {
 
     copy: {
       main: {
-        src: 'app/css/*',
-        dest: 'dist/styles.css'
+        files: [{
+          src: 'app/css/*',
+          dest: 'dist/styles.css'
+        }]
       }
     },
 

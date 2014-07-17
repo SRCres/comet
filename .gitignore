@@ -2,3 +2,4 @@ Comet.mindnode/
 node_modules/
 comet.sublime-project
 comet.sublime-workspace
+.DS_Store

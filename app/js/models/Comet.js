@@ -37,7 +37,8 @@ define([
       this.body.model = this;
     },
 
-    contact: function(contactBody) {
+    contact: function() {
+      App.world.DestroyBody(this.body);
       this.destroy();
     }
   });

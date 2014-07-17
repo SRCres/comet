@@ -35,7 +35,7 @@ define([
       this.path = new THREE.Line(pathGeometry, pathMaterial);
       App.scene.add(this.path);
 
-      this.listenTo(this.model, 'change', this.render);
+      this.listenTo(this.model, 'change:position', this.render);
       this.listenTo(this.model, 'destroy', this.destroy);
     },
 
