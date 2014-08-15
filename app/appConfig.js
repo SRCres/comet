@@ -19,9 +19,5 @@ define({
 
   comet: {
     radius: 5
-  },
-
-  planet: {
-    mass_mult: 20
   }
 });

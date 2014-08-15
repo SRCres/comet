@@ -13,7 +13,6 @@ define([
           }),
           radius = this.model.get('radius'),
           position = this.model.get('position'),
-          // Reemplazar el coeficiente de cantidad de segmentos por la de la configuración de calidad.
           sphereGeometry = new THREE.SphereGeometry(radius, appConfig.render.sphere.width_segments, appConfig.render.sphere.height_segments);
       
       this.sphere = new THREE.Mesh(sphereGeometry, material);
@@ -22,12 +21,18 @@ define([
       App.scene.add(this.sphere);
 
       this.listenTo(this.model, 'change', this.render);
+      this.listenTo(this.model, 'destroy', this.destroy);
     },
 
     render: function() {
       var position = this.model.get('position');
       this.sphere.position.x = position.x;
       this.sphere.position.y = position.y;
+    },
+
+    destroy: function() {
+      App.scene.remove(this.sphere);
+      this.remove();
     }
   });
 

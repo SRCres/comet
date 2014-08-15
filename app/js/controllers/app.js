@@ -61,6 +61,16 @@ define([
 
       App.world.Step(1/appConfig.fps, appConfig.velocity_iterations, appConfig.position_iterations);
 
+      this.planetsCollection.each(function(planet) {
+        var planetPosition = planet.body.GetWorldCenter();
+
+        planet.set('position', {
+            x: planetPosition.get_x()*appConfig.conversion.factor,
+            y: planetPosition.get_y()*appConfig.conversion.factor,
+            z: 0
+          });
+      });
+
       this.cometsCollection.each(function(comet) {
         var cometBody = comet.body,
             cometPosition = cometBody.GetWorldCenter();
@@ -74,7 +84,7 @@ define([
           distance.set_x(cometPosition.get_x() - planetPosition.get_x());
           distance.set_y(cometPosition.get_y() - planetPosition.get_y());
 
-          force = App.G*((cometBody.GetMass()*(planet.get('mass')/appConfig.conversion.factor))/Math.pow(distance.Length(), 2));
+          force = App.G*((cometBody.GetMass()*(planetBody.GetMass()/appConfig.conversion.factor))/Math.pow(distance.Length(), 2));
 
           distance.op_mul(-force);
           cometBody.ApplyForce(distance, cometPosition);
@@ -88,9 +98,7 @@ define([
       }, this);
 
       _.each(this.collisions, function(collision) {
-        if (collision.object.model.get('type') === 'comet') {
-          collision.object.model.contact();
-        }
+        collision.object.model.contact(collision.contactedObject);
       }, this);
 
       this.collisions = [];
@@ -115,7 +123,6 @@ define([
 
         case 'planet':
           config.radius = data.radius;
-          config.mass = data.radius * appConfig.planet.mass_mult;
           config.position = data.position;
           config.color = Math.round(Math.random()*0xFFFFFF);
           model = new PlanetModel(config);

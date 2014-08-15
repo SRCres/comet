@@ -22,7 +22,7 @@ define([
             this.get('position').x / appConfig.conversion.factor,
             this.get('position').y / appConfig.conversion.factor
           );
-      body_def.set_type(Box2D.b2_staticBody);
+      body_def.set_type(Box2D.b2_dynamicBody);
       body_def.set_position(position);
 
       this.body = App.world.CreateBody(body_def);
@@ -31,7 +31,6 @@ define([
     },
 
     contact: function(contactBody) {
-      
     }
   });
 

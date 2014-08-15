@@ -53752,7 +53752,7 @@ define('js/helpers/renderer',[
 define('js/helpers/ambientLight',[
   'three'
 ], function(THREE) {
-  var ambientLight = new THREE.AmbientLight(0x330000);
+  var ambientLight = new THREE.AmbientLight(0x696248);
 
   return ambientLight;
 });
@@ -53785,10 +53785,6 @@ define('appConfig',{
 
   comet: {
     radius: 5
-  },
-
-  planet: {
-    mass_mult: 20
   }
 });
 define('js/models/AstronomyObject',[
@@ -53894,7 +53890,7 @@ define('js/models/Planet',[
             this.get('position').x / appConfig.conversion.factor,
             this.get('position').y / appConfig.conversion.factor
           );
-      body_def.set_type(Box2D.b2_staticBody);
+      body_def.set_type(Box2D.b2_dynamicBody);
       body_def.set_position(position);
 
       this.body = App.world.CreateBody(body_def);
@@ -53903,7 +53899,12 @@ define('js/models/Planet',[
     },
 
     contact: function(contactBody) {
-      
+      var velocity_length = this.body.GetLinearVelocity().Length();
+
+      if (velocity_length > this.body.GetMass()/contactBody.GetMass()*0.15) {
+        App.world.DestroyBody(this.body);
+        this.destroy();
+      }
     }
   });
 
@@ -54000,7 +54001,6 @@ define('js/views/Planet',[
           }),
           radius = this.model.get('radius'),
           position = this.model.get('position'),
-          // Reemplazar el coeficiente de cantidad de segmentos por la de la configuración de calidad.
           sphereGeometry = new THREE.SphereGeometry(radius, appConfig.render.sphere.width_segments, appConfig.render.sphere.height_segments);
       
       this.sphere = new THREE.Mesh(sphereGeometry, material);
@@ -54009,12 +54009,18 @@ define('js/views/Planet',[
       App.scene.add(this.sphere);
 
       this.listenTo(this.model, 'change', this.render);
+      this.listenTo(this.model, 'destroy', this.destroy);
     },
 
     render: function() {
       var position = this.model.get('position');
       this.sphere.position.x = position.x;
       this.sphere.position.y = position.y;
+    },
+
+    destroy: function() {
+      App.scene.remove(this.sphere);
+      this.remove();
     }
   });
 
@@ -54242,6 +54248,16 @@ define('js/controllers/app',[
 
       App.world.Step(1/appConfig.fps, appConfig.velocity_iterations, appConfig.position_iterations);
 
+      this.planetsCollection.each(function(planet) {
+        var planetPosition = planet.body.GetWorldCenter();
+
+        planet.set('position', {
+            x: planetPosition.get_x()*appConfig.conversion.factor,
+            y: planetPosition.get_y()*appConfig.conversion.factor,
+            z: 0
+          });
+      });
+
       this.cometsCollection.each(function(comet) {
         var cometBody = comet.body,
             cometPosition = cometBody.GetWorldCenter();
@@ -54255,7 +54271,7 @@ define('js/controllers/app',[
           distance.set_x(cometPosition.get_x() - planetPosition.get_x());
           distance.set_y(cometPosition.get_y() - planetPosition.get_y());
 
-          force = App.G*((cometBody.GetMass()*(planet.get('mass')/appConfig.conversion.factor))/Math.pow(distance.Length(), 2));
+          force = App.G*((cometBody.GetMass()*(planetBody.GetMass()/appConfig.conversion.factor))/Math.pow(distance.Length(), 2));
 
           distance.op_mul(-force);
           cometBody.ApplyForce(distance, cometPosition);
@@ -54269,9 +54285,7 @@ define('js/controllers/app',[
       }, this);
 
       _.each(this.collisions, function(collision) {
-        if (collision.object.model.get('type') === 'comet') {
-          collision.object.model.contact();
-        }
+        collision.object.model.contact(collision.contactedObject);
       }, this);
 
       this.collisions = [];
@@ -54296,7 +54310,6 @@ define('js/controllers/app',[
 
         case 'planet':
           config.radius = data.radius;
-          config.mass = data.radius * appConfig.planet.mass_mult;
           config.position = data.position;
           config.color = Math.round(Math.random()*0xFFFFFF);
           model = new PlanetModel(config);
